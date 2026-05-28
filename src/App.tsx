@@ -222,6 +222,7 @@ export default function App() {
   const [deleteConfirmSubsystemId, setDeleteConfirmSubsystemId] = useState<string | null>(null);
   const [deleteConfirmSwitchLogId, setDeleteConfirmSwitchLogId] = useState<string | null>(null);
   const [deleteConfirmJournalId, setDeleteConfirmJournalId] = useState<string | null>(null);
+  const [deleteConfirmClearChat, setDeleteConfirmClearChat] = useState<boolean>(false);
   const [loadConfirmAlter, setLoadConfirmAlter] = useState<SavedAlter | null>(null);
 
   // --- DID Local Form States ---
@@ -243,6 +244,7 @@ export default function App() {
 
   // --- PluralKit & Navigation Dropdown States ---
   const [navMenuOpen, setNavMenuOpen] = useState(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [pkToken, setPkToken] = useState<string>(() => localStorage.getItem('pk_token') || '');
   const [pkSystem, setPkSystem] = useState<any | null>(null);
   const [pkMembers, setPkMembers] = useState<any[]>([]);
@@ -252,7 +254,7 @@ export default function App() {
   const [isExportingPkId, setIsExportingPkId] = useState<string | null>(null);
 
   // --- DID LocalStorage Tabs & State ---
-  const [currentTab, setCurrentTab] = useState<'creator' | 'system' | 'chat' | 'switch' | 'journal' | 'pluralkit'>('creator');
+  const [currentTab, setCurrentTab] = useState<'creator' | 'system' | 'chat' | 'switch' | 'journal' | 'pluralkit'>('system');
   const [editingAlterId, setEditingAlterId] = useState<string | null>(null);
   const [saveConflictAlter, setSaveConflictAlter] = useState<SavedAlter | null>(null);
   
@@ -919,9 +921,12 @@ export default function App() {
   };
 
   const handleClearChat = () => {
-    if (confirm(t.deleteConf)) {
-      setChatMessages([]);
-    }
+    setDeleteConfirmClearChat(true);
+  };
+
+  const executeClearChat = () => {
+    setChatMessages([]);
+    setDeleteConfirmClearChat(false);
   };
 
   const handleLogSwitch = (e: React.FormEvent) => {
@@ -1741,123 +1746,128 @@ export default function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1 bg-app-card p-1 rounded-full border border-app-border">
-              <button 
-                onClick={undo}
-                disabled={historyIndex <= 0}
-                className="p-2 hover:bg-app-bg rounded-full transition-all disabled:opacity-20"
-                title={t.undo}
+          <div className="flex items-center gap-4">
+            {/* Unified Settings Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
+                className="p-3 bg-app-card border border-app-border hover:border-app-accent hover:text-app-accent rounded-full transition-all text-app-text shadow-sm flex items-center justify-center cursor-pointer"
+                title={lang === 'fr' ? 'Paramètres' : 'Settings'}
               >
-                <Undo2 className="w-4 h-4" />
+                <Settings2 className={`w-5 h-5 transition-transform duration-500 ${settingsMenuOpen ? 'rotate-90 text-app-accent' : ''}`} />
               </button>
-              <button 
-                onClick={redo}
-                disabled={historyIndex >= history.length - 1}
-                className="p-2 hover:bg-app-bg rounded-full transition-all disabled:opacity-20"
-                title={t.redo}
-              >
-                <Redo2 className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <div className="relative">
-                <button 
-                  onClick={() => setResourcesOpen(!resourcesOpen)}
-                  className="flex items-center gap-1 text-app-text/60 hover:text-app-text transition-opacity"
-                >
-                  {t.resources}
-                  <ChevronDown className={`w-4 h-4 transition-transform ${resourcesOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                <AnimatePresence>
-                  {resourcesOpen && (
+
+              <AnimatePresence>
+                {settingsMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 bg-transparent" 
+                      onClick={() => setSettingsMenuOpen(false)} 
+                    />
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute top-full right-0 mt-2 w-48 bg-app-card rounded-xl shadow-xl border border-app-border overflow-hidden py-2"
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-3 w-64 bg-app-card border border-app-border rounded-3xl shadow-2xl p-5 space-y-4 z-50 overflow-hidden"
                     >
-                      <a 
-                        href="https://www.partielles.com/" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between px-4 py-2 hover:bg-app-bg transition-colors"
-                      >
-                        Partielles
-                        <ExternalLink className="w-3 h-3 opacity-40" />
-                      </a>
-                      <a 
-                        href="https://epsytera.fr/troubles-dissociatifs/le-trouble-dissociatif-de-lidentite-tdi/" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between px-4 py-2 hover:bg-app-bg transition-colors"
-                      >
-                        Epsytera
-                        <ExternalLink className="w-3 h-3 opacity-40" />
-                      </a>
+                      <div className="border-b border-app-border/20 pb-2 flex items-center gap-2">
+                        <Settings2 className="w-4 h-4 text-app-accent animate-spin" style={{ animationDuration: '4s' }} />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-app-muted">
+                          {lang === 'fr' ? 'Paramètres de l\'app' : 'App Settings'}
+                        </span>
+                      </div>
+
+                      {/* Language Selection Section */}
+                      <div className="space-y-1.5">
+                        <span className="block text-[9px] font-black uppercase tracking-widest text-app-muted">
+                          {lang === 'fr' ? 'Langue' : 'Language'}
+                        </span>
+                        <div className="relative">
+                          <select 
+                            value={lang}
+                            onChange={(e) => setLang(e.target.value as 'fr' | 'en')}
+                            className="w-full bg-app-bg text-app-text border border-app-border/45 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-app-accent focus:ring-1 focus:ring-app-accent/25 transition-all outline-none appearance-none cursor-pointer"
+                          >
+                            <option value="fr" className="bg-app-card text-app-text">Français</option>
+                            <option value="en" className="bg-app-card text-app-text">English</option>
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-app-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Typography Selection Section */}
+                      <div className="space-y-1.5">
+                        <span className="block text-[9px] font-black uppercase tracking-widest text-app-muted">
+                          {t.typography}
+                        </span>
+                        <div className="relative">
+                          <select 
+                            value={font}
+                            onChange={(e) => setFont(e.target.value)}
+                            className="w-full bg-app-bg text-app-text border border-app-border/45 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-app-accent focus:ring-1 focus:ring-app-accent/25 transition-all outline-none appearance-none cursor-pointer"
+                          >
+                            {fonts.map((f) => (
+                              <option key={f.value} value={f.value} className="bg-app-card text-app-text">
+                                {f.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-app-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Themes Selection Section */}
+                      <div className="space-y-1.5">
+                        <span className="block text-[9px] font-black uppercase tracking-widest text-app-muted">
+                          {t.theme}
+                        </span>
+                        <div className="relative">
+                          <select 
+                            value={theme}
+                            onChange={(e) => setTheme(e.target.value as Theme)}
+                            className="w-full bg-app-bg text-app-text border border-app-border/45 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-app-accent focus:ring-1 focus:ring-app-accent/25 transition-all outline-none appearance-none cursor-pointer"
+                          >
+                            {(Object.keys(Theme) as Array<keyof typeof Theme>).map((key) => (
+                              <option key={key} value={Theme[key]} className="bg-app-card text-app-text">
+                                {t.themes[Theme[key]]}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-app-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* TDI Resources section embedded directly inside settings at the very bottom */}
+                      <div className="pt-3 border-t border-app-border/20 flex flex-col gap-2">
+                        <span className="block text-[9px] font-black uppercase tracking-widest text-app-muted">
+                          {t.resources}
+                        </span>
+                        <div className="flex flex-col gap-1.5">
+                          <a 
+                            href="https://www.partielles.com/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between px-3 py-2 bg-app-bg/50 border border-app-border/10 hover:border-app-accent hover:text-app-accent transition-colors text-xs font-bold text-app-text rounded-xl"
+                          >
+                            <span>Partielles</span>
+                            <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                          </a>
+                          <a 
+                            href="https://epsytera.fr/troubles-dissociatifs/le-trouble-dissociatif-de-lidentite-tdi/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between px-3 py-2 bg-app-bg/50 border border-app-border/10 hover:border-app-accent hover:text-app-accent transition-colors text-xs font-bold text-app-text rounded-xl"
+                          >
+                            <span>Epsytera</span>
+                            <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+                          </a>
+                        </div>
+                      </div>
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-1.5">
-              <button 
-                onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
-                className="flex items-center gap-2 px-3 py-1.5 bg-app-card border border-app-border rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-app-bg transition-colors w-full justify-center"
-              >
-                <Languages className="w-3 h-3" />
-                {lang === 'fr' ? 'English' : 'Français'}
-              </button>
-
-              <div className="relative group">
-                <button 
-                  className="flex items-center gap-2 px-3 py-1.5 bg-app-card border border-app-border rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-app-bg transition-colors w-full justify-center"
-                >
-                  <Type className="w-3 h-3" />
-                  {t.typography}
-                </button>
-                <div className="absolute top-full right-0 mt-2 w-48 bg-app-card border border-app-border rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-                  <div className="max-h-80 overflow-y-auto">
-                    {fonts.map((f) => (
-                      <button
-                        key={f.value}
-                        onClick={() => setFont(f.value)}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-[10px] font-medium hover:bg-app-bg transition-colors ${font === f.value ? 'text-app-accent bg-app-bg' : 'text-app-text/60'}`}
-                      >
-                        <span className={f.value}>{f.name}</span>
-                        {font === f.value && <Circle className="w-2 h-2 fill-current" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative group">
-                <button 
-                  className="flex items-center gap-2 px-3 py-1.5 bg-app-card border border-app-border rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-app-bg transition-colors w-full justify-center"
-                >
-                  <Palette className="w-3 h-3" />
-                  {t.theme}
-                </button>
-                <div className="absolute top-full right-0 mt-2 w-48 bg-app-card border border-app-border rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-                  <div className="py-2">
-                    {(Object.keys(Theme) as Array<keyof typeof Theme>).map((key) => (
-                      <button
-                        key={key}
-                        onClick={() => setTheme(Theme[key])}
-                        className={`w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-app-bg transition-colors ${theme === Theme[key] ? 'text-app-accent bg-app-bg' : 'text-app-text/60'}`}
-                      >
-                        <span>{t.themes[Theme[key]]}</span>
-                        {theme === Theme[key] && <Circle className="w-2 h-2 fill-current" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -3137,11 +3147,11 @@ export default function App() {
                     value={chatText}
                     onChange={(e) => setChatText(e.target.value)}
                     placeholder={t.chatPlaceholder}
-                    className="flex-1 bg-app-bg border border-app-border rounded-xl px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/25"
+                    className="flex-1 min-w-0 bg-app-bg border border-app-border rounded-xl px-4 sm:px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/25"
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3.5 bg-app-text text-app-bg hover:opacity-90 rounded-xl font-bold text-xs uppercase tracking-widest transition-opacity"
+                    className="shrink-0 px-4 sm:px-6 py-3.5 bg-app-text text-app-bg hover:opacity-90 rounded-xl font-bold text-xs uppercase tracking-widest transition-opacity"
                   >
                     {lang === 'fr' ? 'Envoyer' : 'Send'}
                   </button>
@@ -4030,6 +4040,46 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => setDeleteConfirmJournalId(null)}
+                  className="w-full py-3 bg-app-bg border border-app-border text-app-text font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all"
+                >
+                  {lang === 'fr' ? 'Annuler' : 'Cancel'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Clear Chat Custom Confirmation Modal */}
+        {deleteConfirmClearChat && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-app-card border border-app-border w-full max-w-sm rounded-3xl p-7 shadow-2xl space-y-6 text-center"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 mx-auto">
+                <Trash2 className="w-7 h-7" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-base font-black uppercase tracking-wider text-app-text">
+                  {lang === 'fr' ? 'Effacer la conversation ?' : 'Clear Chat?'}
+                </h3>
+                <p className="text-xs text-app-muted leading-relaxed">
+                  {lang === 'fr' 
+                    ? 'Êtes-vous sûr de vouloir vider l\'historique des messages ? Cette action est irréversible.' 
+                    : 'Are you sure you want to clear the entire chat history? This action cannot be undone.'}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={executeClearChat}
+                  className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-extrabold text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-sm"
+                >
+                  {lang === 'fr' ? 'Effacer' : 'Clear'}
+                </button>
+                <button
+                  onClick={() => setDeleteConfirmClearChat(false)}
                   className="w-full py-3 bg-app-bg border border-app-border text-app-text font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all"
                 >
                   {lang === 'fr' ? 'Annuler' : 'Cancel'}
