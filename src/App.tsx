@@ -2177,31 +2177,18 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
 <div className="w-12 h-12 flex items-center justify-center text-app-text bg-app-accent/15 rounded-2xl border border-app-accent/20 shrink-0">
-  <svg viewBox="0 0 100 100" className="w-9 h-9 text-app-text" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 100 100" className="w-9 h-9 text-app-text" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 {/* Elegant Crescent Moon background representing Space */}
                 <path d="M 50 15 C 31 15, 15 31, 15 50 C 15 69, 31 85, 50 85 C 57 85, 63 83, 69 80 C 53 78, 40 64, 40 48 C 40 32, 53 18, 69 16 C 63 15, 57 15, 50 15 Z" fill="currentColor" className="text-app-accent/50" fillOpacity="0.12" stroke="none" />
-                
-                {/* Clean left stem of H */}
                 <path d="M 30 25 L 30 75" strokeWidth="3.2" />
-                
-                {/* Clean right stem of H */}
                 <path d="M 54 25 L 54 75" strokeWidth="3.2" />
-                
-                {/* Connection line for crossbar of H */}
                 <path d="M 30 50 L 54 50" strokeWidth="2.5" />
-                
-                {/* Compass star of clarity centered in H */}
                 <path d="M 42 42 Q 42 50 50 50 Q 42 50 42 58 Q 42 50 34 50 Q 42 50 42 42 Z" fill="currentColor" className="text-app-accent" stroke="none" />
-
-                {/* Elegant calligraphic S ribbon scaling perfectly */}
                 <path d="M 72 30 C 65 22, 52 26, 52 38 C 52 52, 74 48, 74 62 C 74 74, 61 78, 52 72" strokeWidth="3.2" />
-                
-                {/* Sparkle decorative points */}
                 <path d="M 80 18 Q 80 22 84 22 Q 80 22 80 26 Q 80 22 76 22 Q 80 22 80 18 Z" fill="currentColor" className="text-app-accent" stroke="none" />
                 <path d="M 22 76 Q 22 80 26 80 Q 22 80 22 84 Q 22 80 18 80 Q 22 80 22 76 Z" fill="currentColor" className="text-app-accent" stroke="none" />
               </svg>
-            </div>
-            <div>
+            </div>            <div>
               <h1 className="text-xl font-black uppercase tracking-wider text-app-text">{t.title}</h1>
               <p className="text-[10px] text-app-muted uppercase tracking-widest font-black font-mono">{t.subtitle}</p>
             </div>
