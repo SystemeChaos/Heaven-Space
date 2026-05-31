@@ -36,7 +36,7 @@ export enum AlterRole {
   AGE_SLIDER = 'Age Slider',
   SOCIAL = 'Social',
   OPPOSITE_GENDER = 'Opposite Gender',
-  ABUSER = 'Abuseur',
+  ABUSER = 'Abuser',
 }
 
 export enum Gender {
