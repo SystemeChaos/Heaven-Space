@@ -212,7 +212,7 @@ export const translations = {
       Archivist: "Archiviste",
       "Age Slider": "Age Slider",
       Social: "Social",
-      "Opposite Gender": "Genre Opposé"
+      "Opposite Gender": "Genre Opposé",
       "Abuser": "Abuseur"
     },
     genders: {
