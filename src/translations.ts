@@ -895,7 +895,7 @@ export const translations = {
       Archivist: "Preserves the history, documents, and internal archives of the system.",
       "Age Slider": "Alter whose perceived age fluctuates depending on situations or needs.",
       Social: "Manages external social interactions and maintains links with the environment.",
-      "Opposite Gender": "Alter whose gender is opposite to that of the physical body."
+      "Opposite Gender": "Alter whose gender is opposite to that of the physical body.",
       "Abuser": "Reproduces abusive behaviors internalized during trauma.",
     },
     roleNames: {
