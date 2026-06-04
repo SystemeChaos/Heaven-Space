@@ -891,24 +891,35 @@ export default function App() {
     try {
       const node = flagRef.current;
       const exportWidth = 900;
-      const originalWidth = node.style.width;
-      const originalMaxWidth = node.style.maxWidth;
-      node.style.width = exportWidth + 'px';
-      node.style.maxWidth = exportWidth + 'px';
-      await new Promise(r => setTimeout(r, 100));
-      const dataUrl = await toPng(node, {
+
+      // Clone dans un conteneur hors-écran pour forcer le rendu desktop
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.top = '-99999px';
+      wrapper.style.left = '-99999px';
+      wrapper.style.width = exportWidth + 'px';
+      wrapper.style.background = '#FFFFFF';
+      document.body.appendChild(wrapper);
+
+      const clone = node.cloneNode(true) as HTMLElement;
+      clone.style.width = exportWidth + 'px';
+      clone.style.maxWidth = exportWidth + 'px';
+      clone.style.height = 'auto';
+      clone.style.overflow = 'visible';
+      wrapper.appendChild(clone);
+
+      // Laisser le temps au navigateur de calculer le layout
+      await new Promise(r => setTimeout(r, 200));
+
+      const dataUrl = await toPng(clone, {
         cacheBust: true,
         pixelRatio: 2,
         backgroundColor: '#FFFFFF',
         width: exportWidth,
-        height: node.scrollHeight,
-        style: {
-          width: exportWidth + 'px',
-          maxWidth: exportWidth + 'px',
-        },
+        height: clone.scrollHeight,
       });
-      node.style.width = originalWidth;
-      node.style.maxWidth = originalMaxWidth;
+
+      document.body.removeChild(wrapper);
       
       const link = document.createElement('a');
       link.download = `alter-card-${alterName || 'creator'}.png`;
@@ -928,24 +939,34 @@ export default function App() {
     try {
       const node = flagRef.current;
       const exportWidth = 900;
-      const originalWidth = node.style.width;
-      const originalMaxWidth = node.style.maxWidth;
-      node.style.width = exportWidth + 'px';
-      node.style.maxWidth = exportWidth + 'px';
-      await new Promise(r => setTimeout(r, 100));
-      const dataUrl = await toPng(node, {
+
+      // Clone dans un conteneur hors-écran pour forcer le rendu desktop
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.top = '-99999px';
+      wrapper.style.left = '-99999px';
+      wrapper.style.width = exportWidth + 'px';
+      wrapper.style.background = '#FFFFFF';
+      document.body.appendChild(wrapper);
+
+      const clone = node.cloneNode(true) as HTMLElement;
+      clone.style.width = exportWidth + 'px';
+      clone.style.maxWidth = exportWidth + 'px';
+      clone.style.height = 'auto';
+      clone.style.overflow = 'visible';
+      wrapper.appendChild(clone);
+
+      await new Promise(r => setTimeout(r, 200));
+
+      const dataUrl = await toPng(clone, {
         cacheBust: true,
         pixelRatio: 2.5,
         backgroundColor: '#FFFFFF',
         width: exportWidth,
-        height: node.scrollHeight,
-        style: {
-          width: exportWidth + 'px',
-          maxWidth: exportWidth + 'px',
-        },
+        height: clone.scrollHeight,
       });
-      node.style.width = originalWidth;
-      node.style.maxWidth = originalMaxWidth;
+
+      document.body.removeChild(wrapper);
       
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = 210;
