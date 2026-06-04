@@ -920,11 +920,21 @@ export default function App() {
       });
 
       document.body.removeChild(wrapper);
-      
-      const link = document.createElement('a');
-      link.download = `alter-card-${alterName || 'creator'}.png`;
-      link.href = dataUrl;
-      link.click();
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        // Sur mobile, ouvrir dans un nouvel onglet — l'utilisateur peut appuyer longuement pour sauvegarder
+        const newTab = window.open();
+        if (newTab) {
+          newTab.document.write(`<img src="${dataUrl}" style="max-width:100%" />`);
+          newTab.document.title = `alter-card-${alterName || 'creator'}`;
+        }
+      } else {
+        const link = document.createElement('a');
+        link.download = `alter-card-${alterName || 'creator'}.png`;
+        link.href = dataUrl;
+        link.click();
+      }
     } catch (err) {
       console.error('oops, something went wrong!', err);
     } finally {
