@@ -922,13 +922,20 @@ export default function App() {
       document.body.removeChild(wrapper);
 
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile && navigator.canShare) {
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-        const file = new File([blob], `alter-card-${alterName || 'creator'}.png`, { type: 'image/png' });
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file] });
-        } else {
+      if (isMobile) {
+        try {
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `alter-card-${alterName || 'creator'}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        } catch {
+          // Fallback nouvel onglet
           const newTab = window.open();
           if (newTab) newTab.document.write(`<img src="${dataUrl}" style="max-width:100%" />`);
         }
