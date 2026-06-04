@@ -889,11 +889,26 @@ export default function App() {
     
     setIsDownloading(true);
     try {
-      const dataUrl = await toPng(flagRef.current, {
+      const node = flagRef.current;
+      const exportWidth = 900;
+      const originalWidth = node.style.width;
+      const originalMaxWidth = node.style.maxWidth;
+      node.style.width = exportWidth + 'px';
+      node.style.maxWidth = exportWidth + 'px';
+      await new Promise(r => setTimeout(r, 100));
+      const dataUrl = await toPng(node, {
         cacheBust: true,
-        pixelRatio: 2, // Higher quality
+        pixelRatio: 2,
         backgroundColor: '#FFFFFF',
+        width: exportWidth,
+        height: node.scrollHeight,
+        style: {
+          width: exportWidth + 'px',
+          maxWidth: exportWidth + 'px',
+        },
       });
+      node.style.width = originalWidth;
+      node.style.maxWidth = originalMaxWidth;
       
       const link = document.createElement('a');
       link.download = `alter-card-${alterName || 'creator'}.png`;
@@ -912,19 +927,25 @@ export default function App() {
     setIsDownloading(true);
     try {
       const node = flagRef.current;
+      const exportWidth = 900;
+      const originalWidth = node.style.width;
+      const originalMaxWidth = node.style.maxWidth;
+      node.style.width = exportWidth + 'px';
+      node.style.maxWidth = exportWidth + 'px';
+      await new Promise(r => setTimeout(r, 100));
       const dataUrl = await toPng(node, {
         cacheBust: true,
         pixelRatio: 2.5,
         backgroundColor: '#FFFFFF',
-        width: node.scrollWidth,
+        width: exportWidth,
         height: node.scrollHeight,
         style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left',
-          width: node.scrollWidth + 'px',
-          height: node.scrollHeight + 'px',
+          width: exportWidth + 'px',
+          maxWidth: exportWidth + 'px',
         },
       });
+      node.style.width = originalWidth;
+      node.style.maxWidth = originalMaxWidth;
       
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = 210;
