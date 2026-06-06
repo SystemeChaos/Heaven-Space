@@ -96,9 +96,12 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
   const canvasRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
+  const panning = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
 
   const [mapping, setMapping] = useState<MappingData>(loadMapping);
   const [canvasSize, setCanvasSize] = useState({ w: 800, h: 600 });
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [showAddRelation, setShowAddRelation] = useState(false);
   const [newRel, setNewRel] = useState<{ sourceId: string; targetId: string; type: RelationType; label: string }>({
     sourceId: '', targetId: '', type: 'friend', label: '',
@@ -155,54 +158,89 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
 
   const onNodeMouseDown = useCallback((e: React.MouseEvent, id: string) => {
     e.preventDefault();
+    e.stopPropagation();
     const svg = canvasRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const node = mapping.nodes.find(n => n.id === id);
     if (!node) return;
-    dragging.current = { id, offsetX: e.clientX - rect.left - node.x, offsetY: e.clientY - rect.top - node.y };
-  }, [mapping.nodes]);
+    // Tenir compte du zoom et du pan
+    dragging.current = {
+      id,
+      offsetX: (e.clientX - rect.left) / zoom - pan.x - node.x,
+      offsetY: (e.clientY - rect.top) / zoom - pan.y - node.y,
+    };
+  }, [mapping.nodes, zoom, pan]);
 
   const onNodeTouchStart = useCallback((e: React.TouchEvent, id: string) => {
+    e.stopPropagation();
     const svg = canvasRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const node = mapping.nodes.find(n => n.id === id);
     if (!node) return;
     const touch = e.touches[0];
-    dragging.current = { id, offsetX: touch.clientX - rect.left - node.x, offsetY: touch.clientY - rect.top - node.y };
-  }, [mapping.nodes]);
+    dragging.current = {
+      id,
+      offsetX: (touch.clientX - rect.left) / zoom - pan.x - node.x,
+      offsetY: (touch.clientY - rect.top) / zoom - pan.y - node.y,
+    };
+  }, [mapping.nodes, zoom, pan]);
+
+  // Pan sur fond (clic sur zone vide)
+  const onCanvasMouseDown = useCallback((e: React.MouseEvent) => {
+    if (dragging.current) return;
+    panning.current = { startX: e.clientX, startY: e.clientY, originX: pan.x, originY: pan.y };
+  }, [pan]);
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragging.current || !canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.max(50, Math.min(canvasSize.w - 50, e.clientX - rect.left - dragging.current.offsetX));
-    const y = Math.max(50, Math.min(canvasSize.h - 50, e.clientY - rect.top - dragging.current.offsetY));
-    setMapping(prev => ({
-      ...prev,
-      nodes: prev.nodes.map(n => n.id === dragging.current!.id ? { ...n, x, y } : n),
-    }));
-  }, [canvasSize]);
+    if (dragging.current && canvasRef.current) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / zoom - pan.x - dragging.current.offsetX;
+      const y = (e.clientY - rect.top) / zoom - pan.y - dragging.current.offsetY;
+      setMapping(prev => ({
+        ...prev,
+        nodes: prev.nodes.map(n => n.id === dragging.current!.id ? { ...n, x, y } : n),
+      }));
+    } else if (panning.current) {
+      const dx = (e.clientX - panning.current.startX) / zoom;
+      const dy = (e.clientY - panning.current.startY) / zoom;
+      setPan({ x: panning.current.originX + dx, y: panning.current.originY + dy });
+    }
+  }, [zoom, pan]);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!dragging.current || !canvasRef.current) return;
     e.preventDefault();
     const rect = canvasRef.current.getBoundingClientRect();
     const touch = e.touches[0];
-    const x = Math.max(50, Math.min(canvasSize.w - 50, touch.clientX - rect.left - dragging.current.offsetX));
-    const y = Math.max(50, Math.min(canvasSize.h - 50, touch.clientY - rect.top - dragging.current.offsetY));
+    const x = (touch.clientX - rect.left) / zoom - pan.x - dragging.current.offsetX;
+    const y = (touch.clientY - rect.top) / zoom - pan.y - dragging.current.offsetY;
     setMapping(prev => ({
       ...prev,
       nodes: prev.nodes.map(n => n.id === dragging.current!.id ? { ...n, x, y } : n),
     }));
-  }, [canvasSize]);
+  }, [zoom, pan]);
 
   const onMouseUp = useCallback(() => {
     if (dragging.current) {
       setMapping(prev => { saveMapping(prev); return prev; });
     }
     dragging.current = null;
+    panning.current = null;
   }, []);
+
+  // Zoom molette
+  const onWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    setZoom(prev => Math.min(3, Math.max(0.3, prev - e.deltaY * 0.001)));
+  }, []);
+
+  const zoomIn = () => setZoom(prev => Math.min(3, prev + 0.2));
+  const zoomOut = () => setZoom(prev => Math.max(0.3, prev - 0.2));
+  const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+
+
 
   const handleAddRelation = () => {
     if (!newRel.sourceId || !newRel.targetId || newRel.sourceId === newRel.targetId) return;
@@ -259,17 +297,29 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
       </div>
 
       <div ref={containerRef} className="relative rounded-2xl border border-app-border overflow-hidden bg-app-card" style={{ userSelect: 'none' }}>
+        {/* Boutons zoom */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1">
+          <button onClick={zoomIn} className="w-8 h-8 rounded-lg bg-app-card border border-app-border text-app-text text-lg font-bold flex items-center justify-center hover:bg-app-bg transition-all shadow-sm">+</button>
+          <button onClick={zoomOut} className="w-8 h-8 rounded-lg bg-app-card border border-app-border text-app-text text-lg font-bold flex items-center justify-center hover:bg-app-bg transition-all shadow-sm">−</button>
+          <button onClick={resetView} className="w-8 h-8 rounded-lg bg-app-card border border-app-border text-app-muted text-[10px] font-bold flex items-center justify-center hover:bg-app-bg transition-all shadow-sm">⌖</button>
+        </div>
+        {/* Indicateur zoom */}
+        <div className="absolute bottom-3 right-3 z-10 text-[10px] text-app-muted font-mono bg-app-card/80 px-2 py-1 rounded-lg border border-app-border">
+          {Math.round(zoom * 100)}%
+        </div>
         <svg
           ref={canvasRef}
           width={canvasSize.w}
           height={canvasSize.h}
+          onMouseDown={onCanvasMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
           onTouchMove={onTouchMove}
           onTouchEnd={onMouseUp}
+          onWheel={onWheel}
           className="w-full"
-          style={{ touchAction: 'none' }}
+          style={{ touchAction: 'none', cursor: panning.current ? 'grabbing' : 'default' }}
         >
           <defs>
             {(Object.entries(RELATION_CONFIG) as [RelationType, typeof RELATION_CONFIG[RelationType]][]).map(([type, cfg]) =>
@@ -280,6 +330,8 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
               ) : null
             )}
           </defs>
+          {/* Groupe transformé pour zoom/pan */}
+          <g transform={`scale(${zoom}) translate(${pan.x}, ${pan.y})`}>
 
           {mapping.relations.map(rel => {
             const source = mapping.nodes.find(n => n.id === rel.sourceId);
@@ -368,6 +420,7 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
               </g>
             );
           })}
+          </g>
         </svg>
       </div>
 
