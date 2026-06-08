@@ -136,8 +136,8 @@ import SwitchAnalytics from './components/SwitchAnalytics';
 
 export default function App() {
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
-  const [font, setFont] = useState<string>('font-sans');
-  const [theme, setTheme] = useState<Theme>(Theme.LIGHT);
+  const [font, setFont] = useState<string>(() => localStorage.getItem('hs-font') || 'font-sans');
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('hs-theme') as Theme) || Theme.LIGHT);
   const [activeLegalPage, setActiveLegalPage] = useState<LegalPage | null>(null);
 
   const fonts = [
@@ -2400,6 +2400,7 @@ export default function App() {
                                       key={f.value}
                                       onClick={() => {
                                         setFont(f.value);
+                                        localStorage.setItem('hs-font', f.value);
                                         setSettingsFontOpen(false);
                                       }}
                                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${font === f.value ? 'bg-app-accent text-white font-extrabold' : 'hover:bg-app-card/75 text-app-text/85'}`}
@@ -2446,6 +2447,7 @@ export default function App() {
                                       key={key}
                                       onClick={() => {
                                         setTheme(Theme[key]);
+                                        localStorage.setItem('hs-theme', Theme[key]);
                                         setSettingsThemeOpen(false);
                                       }}
                                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${theme === Theme[key] ? 'bg-app-accent text-white font-extrabold' : 'hover:bg-app-card/75 text-app-text/85'}`}
