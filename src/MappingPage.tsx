@@ -100,7 +100,7 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
 
   const [mapping, setMapping] = useState<MappingData>(loadMapping);
   const [canvasSize, setCanvasSize] = useState({ w: 800, h: 600 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(0.6);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [showAddRelation, setShowAddRelation] = useState(false);
   const [newRel, setNewRel] = useState<{ sourceId: string; targetId: string; type: RelationType; label: string }>({
@@ -198,10 +198,27 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
     };
   }, [mapping.nodes, zoom, pan]);
 
+  const touchPan = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
+  const pinch = useRef<{ dist: number; originZoom: number } | null>(null);
+
   const onCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     if (dragging.current) return;
     panning.current = { startX: e.clientX, startY: e.clientY, originX: pan.x, originY: pan.y };
   }, [pan]);
+
+  const onCanvasTouchStart = useCallback((e: React.TouchEvent) => {
+    if (dragging.current) return;
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      touchPan.current = { startX: t.clientX, startY: t.clientY, originX: pan.x, originY: pan.y };
+      pinch.current = null;
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[1].clientX - e.touches[0].clientX;
+      const dy = e.touches[1].clientY - e.touches[0].clientY;
+      pinch.current = { dist: Math.hypot(dx, dy), originZoom: zoom };
+      touchPan.current = null;
+    }
+  }, [pan, zoom]);
 
   const rafRef = useRef<number | null>(null);
 
@@ -226,20 +243,35 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
   }, [zoom, pan]);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!dragging.current || !canvasRef.current) return;
     e.preventDefault();
-    const rect = canvasRef.current.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = (touch.clientX - rect.left) / zoom - pan.x - dragging.current.offsetX;
-    const y = (touch.clientY - rect.top) / zoom - pan.y - dragging.current.offsetY;
-    const id = dragging.current.id;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      setMapping(prev => ({
-        ...prev,
-        nodes: prev.nodes.map(n => n.id === id ? { ...n, x, y } : n),
-      }));
-    });
+    // Drag nœud (1 doigt sur un nœud)
+    if (dragging.current && canvasRef.current && e.touches.length === 1) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = (touch.clientX - rect.left) / zoom - pan.x - dragging.current.offsetX;
+      const y = (touch.clientY - rect.top) / zoom - pan.y - dragging.current.offsetY;
+      const id = dragging.current.id;
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        setMapping(prev => ({
+          ...prev,
+          nodes: prev.nodes.map(n => n.id === id ? { ...n, x, y } : n),
+        }));
+      });
+    // Pan 1 doigt sur le canvas
+    } else if (touchPan.current && e.touches.length === 1) {
+      const t = e.touches[0];
+      const dx = (t.clientX - touchPan.current.startX) / zoom;
+      const dy = (t.clientY - touchPan.current.startY) / zoom;
+      setPan({ x: touchPan.current.originX + dx, y: touchPan.current.originY + dy });
+    // Pinch-to-zoom 2 doigts
+    } else if (pinch.current && e.touches.length === 2) {
+      const dx = e.touches[1].clientX - e.touches[0].clientX;
+      const dy = e.touches[1].clientY - e.touches[0].clientY;
+      const newDist = Math.hypot(dx, dy);
+      const ratio = newDist / pinch.current.dist;
+      setZoom(Math.min(3, Math.max(0.3, pinch.current.originZoom * ratio)));
+    }
   }, [zoom, pan]);
 
   const onMouseUp = useCallback(() => {
@@ -249,6 +281,8 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
     }
     dragging.current = null;
     panning.current = null;
+    touchPan.current = null;
+    pinch.current = null;
   }, []);
 
   const zoomIn = () => setZoom(prev => Math.min(3, prev + 0.2));
@@ -330,6 +364,7 @@ export default function MappingPage({ savedAlters, lang }: MappingPageProps) {
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
+          onTouchStart={onCanvasTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onMouseUp}
           className="w-full"
