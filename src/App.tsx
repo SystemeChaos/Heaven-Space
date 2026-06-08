@@ -2272,7 +2272,7 @@ export default function App() {
       default: // LIGHT
         return {
           '--color-app-bg': '#f2ede9',
-          '--color-app-card': 'rgba(255,255,255,0.6)',
+          '--color-app-card': '#ffffff',
           '--color-app-text': '#273f4f',
           '--color-app-muted': 'rgba(39,63,79,0.5)',
           '--color-app-border': 'rgba(39,63,79,0.12)',
