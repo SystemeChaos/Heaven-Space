@@ -1193,7 +1193,6 @@ export default function App() {
     setCustomRoleColors({});
     setCustomGenderColors({});
     setCustomSexualityColors({});
-    setTheme(Theme.LIGHT);
     setProfileImage('');
     setDescription('');
     setInternalNotes('');
