@@ -2765,9 +2765,9 @@ export default function App() {
                     className="w-full bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted" />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted">{lang === 'fr' ? "Univers d'origine" : 'Origin World'}</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted">{lang === 'fr' ? "Source de l'alter" : 'Alter Source'}</label>
                   <input type="text" value={alterOriginWorld} onChange={e => setAlterOriginWorld(e.target.value)}
-                    placeholder={lang === 'fr' ? 'DMC5, monde interieur...' : 'DMC5, inner world...'}
+                    placeholder={lang === 'fr' ? 'Fictif ou factif' : 'Fictitious or factual'}
                     className="w-full bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted" />
                 </div>
               </div>
