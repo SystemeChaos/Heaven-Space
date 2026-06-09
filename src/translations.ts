@@ -1,6 +1,6 @@
 export const translations = {
   fr: {
-    title: "Heaven Space",
+    title: "Haven Space",
     subtitle: "Outil Système TDI",
     menuCreator: "Créateur de Fiche",
     menuMySystem: "Mon Système",
@@ -102,7 +102,7 @@ export const translations = {
     customSymbols: "Symboles Personnalisés",
     traitsIncluded: "Traits Inclus",
     disclaimer: "Cet outil est conçu pour la communauté TDI/ATDS. Chaque système est unique et valide.",
-    copyright: "Heaven Space © 2026",
+    copyright: "Haven Space © 2026",
     privacy: "Confidentialité",
     about: "À propos",
     contact: "Contact",
@@ -724,7 +724,7 @@ export const translations = {
     },
   },
   en: {
-    title: "Heaven Space",
+    title: "Haven Space",
     subtitle: "DID System Tool",
     menuCreator: "Card Creator",
     menuMySystem: "My System",
@@ -826,7 +826,7 @@ export const translations = {
     customSymbols: "Custom Symbols",
     traitsIncluded: "Included Traits",
     disclaimer: "This tool is designed for the DID/OSDD community. Every system is unique and valid.",
-    copyright: "Heaven Space © 2026",
+    copyright: "Haven Space © 2026",
     privacy: "Privacy",
     about: "About",
     contact: "Contact",
