@@ -128,10 +128,8 @@ import {
   Save,
   GitBranch,
   FileJson,
-  Archive,
-  Tag,
 } from 'lucide-react';
-import { AlterRole, Gender, Sexuality, Trait, PersonalityTrait, Disorder, ROLE_CONFIGS, GENDER_COLORS, SEXUALITY_COLORS, ShapeType, PatternType, PatternLayer, Decoration, GENDER_CATEGORIES, SEXUALITY_CATEGORIES, TraitDecoration, Theme, SavedAlter, CustomField, Subsystem, ChatMessage, SwitchLog, JournalEntry } from './types';
+import { AlterRole, Gender, Sexuality, Trait, PersonalityTrait, Disorder, ROLE_CONFIGS, GENDER_COLORS, SEXUALITY_COLORS, ShapeType, PatternType, PatternLayer, Decoration, GENDER_CATEGORIES, SEXUALITY_CATEGORIES, TraitDecoration, Theme, SavedAlter, Subsystem, ChatMessage, SwitchLog, JournalEntry } from './types';
 import { translations } from './translations';
 import { jsPDF } from 'jspdf';
 import LegalPages, { LegalPage } from './components/LegalPages';
@@ -176,8 +174,6 @@ export default function App() {
     personalityTraits: false,
     disorders: false,
     elements: false,
-    predefined: false,
-    customFields: false,
   });
   const [activeRolePatternSettings, setActiveRolePatternSettings] = useState<AlterRole | null>(null);
   const [resourcesOpen, setResourcesOpen] = useState(false);
@@ -227,15 +223,6 @@ export default function App() {
   const [profileImage, setProfileImage] = useState<string>('');
   const [description, setDescription] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
-  // Champs prédéfinis
-  const [alterAge, setAlterAge] = useState('');
-  const [alterColor, setAlterColor] = useState('');
-  const [triggersPositive, setTriggersPositive] = useState('');
-  const [triggersNegative, setTriggersNegative] = useState('');
-  const [alterLanguages, setAlterLanguages] = useState('');
-  const [alterOriginWorld, setAlterOriginWorld] = useState('');
-  // Champs personnalisés libres
-  const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [frontStatus, setFrontStatus] = useState<string>('none');
   const [mainSystemName, setMainSystemName] = useState<string>(() => {
     return localStorage.getItem('mainSystemName') || (lang === 'fr' ? 'Système Principal' : 'Primary System');
@@ -1149,14 +1136,6 @@ export default function App() {
       subsystemId: existingSubsystemId,
       frontStatus: frontStatus || 'none',
       pkId: existingPkId,
-      alterAge: alterAge || undefined,
-      alterColor: alterColor || undefined,
-      triggersPositive: triggersPositive || undefined,
-      triggersNegative: triggersNegative || undefined,
-      alterLanguages: alterLanguages || undefined,
-      alterOriginWorld: alterOriginWorld || undefined,
-      customFields: customFields.length > 0 ? customFields : undefined,
-      archived: existingAlter?.archived || false,
     };
 
     if (savedAlters.some(a => a.id === freshId)) {
@@ -1185,13 +1164,6 @@ export default function App() {
     setProfileImage(alter.profileImage || '');
     setDescription(alter.description || '');
     setInternalNotes(alter.internalNotes || '');
-    setAlterAge(alter.alterAge || '');
-    setAlterColor(alter.alterColor || '');
-    setTriggersPositive(alter.triggersPositive || '');
-    setTriggersNegative(alter.triggersNegative || '');
-    setAlterLanguages(alter.alterLanguages || '');
-    setAlterOriginWorld(alter.alterOriginWorld || '');
-    setCustomFields(alter.customFields || []);
     setFrontStatus(alter.frontStatus || 'none');
     setEditingAlterId(alter.id);
     setCurrentTab('creator');
@@ -1221,13 +1193,6 @@ export default function App() {
     setProfileImage('');
     setDescription('');
     setInternalNotes('');
-    setAlterAge('');
-    setAlterColor('');
-    setTriggersPositive('');
-    setTriggersNegative('');
-    setAlterLanguages('');
-    setAlterOriginWorld('');
-    setCustomFields([]);
     setFrontStatus('none');
     setEditingAlterId(null);
     setCurrentTab('creator'); // Route user directly to creator
@@ -1607,10 +1572,6 @@ export default function App() {
             <button onClick={() => handleLoadAlter(alter)} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide border border-app-border rounded-xl text-app-muted hover:text-app-text hover:border-app-accent transition-all whitespace-nowrap">
               {lang === 'fr' ? 'Charger' : 'Load'}
             </button>
-            <button onClick={() => setSavedAlters(prev => prev.map(a => a.id === alter.id ? { ...a, archived: !a.archived } : a))}
-              className="p-1.5 text-app-muted hover:text-amber-500 transition-colors shrink-0" title={alter.archived ? (lang === 'fr' ? 'Désarchiver' : 'Unarchive') : (lang === 'fr' ? 'Archiver' : 'Archive')}>
-              <Archive className="w-4 h-4" />
-            </button>
             <button onClick={() => handleDeleteAlter(alter.id)} className="p-1.5 text-app-muted hover:text-red-400 transition-colors shrink-0">
               <Trash2 className="w-4 h-4" />
             </button>
@@ -1688,13 +1649,6 @@ export default function App() {
               className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest bg-app-bg hover:bg-app-accent hover:text-white border border-app-border/40 hover:border-transparent rounded-lg transition-all"
             >
               {lang === 'fr' ? 'Charger' : 'Load'}
-            </button>
-            <button
-              onClick={() => setSavedAlters(prev => prev.map(a => a.id === alter.id ? { ...a, archived: !a.archived } : a))}
-              className="p-1 text-app-muted hover:text-amber-500 rounded-lg transition-colors"
-              title={alter.archived ? (lang === 'fr' ? 'Désarchiver' : 'Unarchive') : (lang === 'fr' ? 'Archiver' : 'Archive')}
-            >
-              <Archive className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => handleDeleteAlter(alter.id)}
@@ -2704,155 +2658,6 @@ export default function App() {
             />
           </section>
 
-          </section>
-
-          {/* ── Bloc 1 : Champs prédéfinis ──────────────────────────── */}
-          <section className="space-y-4">
-            <button
-              onClick={() => toggleSection('predefined' as any)}
-              className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wider text-app-muted hover:text-app-text transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Tag className="w-3 h-3" />
-                <span>{lang === 'fr' ? 'Informations de l\'alter' : 'Alter Information'}</span>
-              </div>
-              {(openSections as any).predefined ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-            {(openSections as any).predefined && (
-              <div className="space-y-4">
-                {/* Âge */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted">{lang === 'fr' ? 'Âge' : 'Age'} <span className="opacity-50">({lang === 'fr' ? 'optionnel' : 'optional'})</span></label>
-                  <input type="text" value={alterAge} onChange={e => setAlterAge(e.target.value)}
-                    placeholder={lang === 'fr' ? 'Ex: 17, inconnu, ageless...' : 'E.g. 17, unknown, ageless...'}
-                    className="w-full bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted" />
-                </div>
-
-                {/* Couleur associée */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted">{lang === 'fr' ? 'Couleur associée' : 'Associated Color'} <span className="opacity-50">({lang === 'fr' ? 'optionnel' : 'optional'})</span></label>
-                  <div className="flex items-center gap-3">
-                    {/* Gradient picker canvas */}
-                    <div className="relative flex-1">
-                      <input
-                        type="color"
-                        value={alterColor || '#8B6F4E'}
-                        onChange={e => setAlterColor(e.target.value)}
-                        className="sr-only"
-                        id="alterColorPicker"
-                      />
-                      {/* Palette de couleurs prédéfinies */}
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#8b5cf6','#ec4899','#f43f5e','#84cc16','#06b6d4','#a855f7','#6366f1','#e11d48','#1d4ed8','#ffffff','#94a3b8','#1e293b'].map(c => (
-                          <button key={c} type="button" onClick={() => setAlterColor(c)}
-                            className={`w-6 h-6 rounded-lg border-2 transition-transform hover:scale-110 ${alterColor === c ? 'border-app-text scale-110' : 'border-transparent'}`}
-                            style={{ backgroundColor: c }} />
-                        ))}
-                      </div>
-                      {/* Hex input + preview */}
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={alterColor}
-                          onChange={e => setAlterColor(e.target.value)}
-                          placeholder="#8B6F4E"
-                          className="flex-1 bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted uppercase"
-                        />
-                        <label htmlFor="alterColorPicker" className="w-10 h-10 rounded-xl border border-app-border cursor-pointer flex-shrink-0 transition-transform hover:scale-105"
-                          style={{ backgroundColor: alterColor || '#8B6F4E' }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Triggers positifs / négatifs */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted">{lang === 'fr' ? 'Triggers' : 'Triggers'} <span className="opacity-50">({lang === 'fr' ? 'optionnel' : 'optional'})</span></label>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 border border-emerald-500/20">+</span>
-                      <input type="text" value={triggersPositive} onChange={e => setTriggersPositive(e.target.value)}
-                        placeholder={lang === 'fr' ? 'Musique, nature, câlins...' : 'Music, nature, hugs...'}
-                        className="w-full bg-app-card border border-app-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-app-text placeholder:text-app-muted" />
-                    </div>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-red-500/15 text-red-500 border border-red-500/20">−</span>
-                      <input type="text" value={triggersNegative} onChange={e => setTriggersNegative(e.target.value)}
-                        placeholder={lang === 'fr' ? 'Conflits, foule, bruit fort...' : 'Conflicts, crowds, loud noises...'}
-                        className="w-full bg-app-card border border-app-border rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 text-app-text placeholder:text-app-muted" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Langues */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted">{lang === 'fr' ? 'Langues parlées' : 'Languages'} <span className="opacity-50">({lang === 'fr' ? 'optionnel' : 'optional'})</span></label>
-                  <input type="text" value={alterLanguages} onChange={e => setAlterLanguages(e.target.value)}
-                    placeholder={lang === 'fr' ? 'Ex: Français, Anglais, Japonais...' : 'E.g. French, English, Japanese...'}
-                    className="w-full bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted" />
-                </div>
-
-                {/* Univers d'origine */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-app-muted">{lang === 'fr' ? 'Univers d\'origine' : 'Origin World'} <span className="opacity-50">({lang === 'fr' ? 'optionnel' : 'optional'})</span></label>
-                  <input type="text" value={alterOriginWorld} onChange={e => setAlterOriginWorld(e.target.value)}
-                    placeholder={lang === 'fr' ? 'Ex: DMC5, monde intérieur, réel...' : 'E.g. DMC5, inner world, real...'}
-                    className="w-full bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted" />
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* ── Bloc 2 : Champs personnalisés libres ────────────────── */}
-          <section className="space-y-4">
-            <button
-              onClick={() => toggleSection('customFields' as any)}
-              className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wider text-app-muted hover:text-app-text transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Plus className="w-3 h-3" />
-                <span>{lang === 'fr' ? 'Champs personnalisés' : 'Custom Fields'}</span>
-              </div>
-              {(openSections as any).customFields ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
-            {(openSections as any).customFields && (
-              <div className="space-y-3">
-                {customFields.map((field, idx) => (
-                  <div key={field.id} className="flex items-start gap-2">
-                    <div className="flex-1 grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        value={field.label}
-                        onChange={e => setCustomFields(prev => prev.map((f, i) => i === idx ? { ...f, label: e.target.value } : f))}
-                        placeholder={lang === 'fr' ? 'Label...' : 'Label...'}
-                        className="bg-app-card border border-app-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted font-bold"
-                      />
-                      <input
-                        type="text"
-                        value={field.value}
-                        onChange={e => setCustomFields(prev => prev.map((f, i) => i === idx ? { ...f, value: e.target.value } : f))}
-                        placeholder={lang === 'fr' ? 'Valeur...' : 'Value...'}
-                        className="bg-app-card border border-app-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-app-accent/20 text-app-text placeholder:text-app-muted"
-                      />
-                    </div>
-                    <button type="button" onClick={() => setCustomFields(prev => prev.filter((_, i) => i !== idx))}
-                      className="mt-1 p-2 rounded-lg text-app-muted hover:text-red-500 hover:bg-red-500/10 transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setCustomFields(prev => [...prev, { id: Math.random().toString(36).substring(2, 9), label: '', value: '' }])}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-app-border hover:border-app-accent/40 text-app-muted hover:text-app-text text-xs font-bold uppercase tracking-widest transition-colors"
-                >
-                  <Plus className="w-3 h-3" />
-                  {lang === 'fr' ? 'Ajouter un champ' : 'Add a field'}
-                </button>
-              </div>
-            )}
-          </section>
-
           {/* Roles Selection */}
           <section className="space-y-4">
             <button 
@@ -3500,78 +3305,6 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Champs prédéfinis dans la preview */}
-                      {(alterAge || alterColor || triggersPositive || triggersNegative || alterLanguages || alterOriginWorld) && (
-                        <div className="space-y-1.5 animate-fade-in">
-                          <div className="text-[9px] font-black uppercase tracking-widest text-app-accent/80 px-1 font-mono flex items-center gap-1.5">
-                            <Tag className="w-2.5 h-2.5" />
-                            {lang === 'fr' ? 'Informations' : 'Information'}
-                          </div>
-                          <div className="px-3 py-2.5 bg-app-card/30 rounded-2xl border border-app-border/10 space-y-1.5">
-                            {alterAge && (
-                              <div className="flex items-center gap-2 text-[10px]">
-                                <span className="font-black uppercase tracking-widest text-app-muted w-20 shrink-0">{lang === 'fr' ? 'Âge' : 'Age'}</span>
-                                <span className="text-app-text/85">{alterAge}</span>
-                              </div>
-                            )}
-                            {alterColor && (
-                              <div className="flex items-center gap-2 text-[10px]">
-                                <span className="font-black uppercase tracking-widest text-app-muted w-20 shrink-0">{lang === 'fr' ? 'Couleur' : 'Color'}</span>
-                                <span className="w-4 h-4 rounded-md border border-app-border/20 inline-block shrink-0" style={{ backgroundColor: alterColor }} />
-                                <span className="font-mono text-app-text/85">{alterColor}</span>
-                              </div>
-                            )}
-                            {(triggersPositive || triggersNegative) && (
-                              <div className="space-y-1">
-                                <span className="font-black uppercase tracking-widest text-app-muted text-[10px]">{lang === 'fr' ? 'Triggers' : 'Triggers'}</span>
-                                {triggersPositive && (
-                                  <div className="flex items-start gap-1.5 text-[10px]">
-                                    <span className="font-black text-emerald-500 shrink-0">+</span>
-                                    <span className="text-app-text/85">{triggersPositive}</span>
-                                  </div>
-                                )}
-                                {triggersNegative && (
-                                  <div className="flex items-start gap-1.5 text-[10px]">
-                                    <span className="font-black text-red-500 shrink-0">−</span>
-                                    <span className="text-app-text/85">{triggersNegative}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            {alterLanguages && (
-                              <div className="flex items-center gap-2 text-[10px]">
-                                <span className="font-black uppercase tracking-widest text-app-muted w-20 shrink-0">{lang === 'fr' ? 'Langues' : 'Languages'}</span>
-                                <span className="text-app-text/85">{alterLanguages}</span>
-                              </div>
-                            )}
-                            {alterOriginWorld && (
-                              <div className="flex items-center gap-2 text-[10px]">
-                                <span className="font-black uppercase tracking-widest text-app-muted w-20 shrink-0">{lang === 'fr' ? 'Univers' : 'World'}</span>
-                                <span className="text-app-text/85">{alterOriginWorld}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Champs personnalisés dans la preview */}
-                      {customFields.filter(f => f.label || f.value).length > 0 && (
-                        <div className="space-y-1.5 animate-fade-in">
-                          <div className="text-[9px] font-black uppercase tracking-widest text-app-accent/80 px-1 font-mono flex items-center gap-1.5">
-                            <Plus className="w-2.5 h-2.5" />
-                            {lang === 'fr' ? 'Champs personnalisés' : 'Custom Fields'}
-                          </div>
-                          <div className="px-3 py-2.5 bg-app-card/30 rounded-2xl border border-app-border/10 space-y-1.5">
-                            {customFields.filter(f => f.label || f.value).map(f => (
-                              <div key={f.id} className="flex items-center gap-2 text-[10px]">
-                                <span className="font-black uppercase tracking-widest text-app-muted shrink-0 max-w-[5rem] truncate">{f.label || '—'}</span>
-                                <span className="text-app-text/85">{f.value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
                       {/* Fallback Empty State / Placeholder */}
                       {traitDecorations.length === 0 && !description && !internalNotes && (
                         <div className="flex flex-col items-center justify-center p-6 text-center border border-dashed border-app-border/25 rounded-2xl bg-app-card/20 h-[270px]">
@@ -3852,17 +3585,17 @@ export default function App() {
                       {subsystems.filter(s => !s.parentId).map(rootSub => renderSubsystemNode(rootSub.id))}
 
                       {/* Unassigned Alters Section - Without header label as requested */}
-                      {savedAlters.filter(a => !a.subsystemId && !a.archived).length > 0 && (
+                      {savedAlters.filter(a => !a.subsystemId).length > 0 && (
                         <div className="space-y-4">
                           <div className="md:hidden rounded-2xl border border-app-border/30 overflow-hidden bg-app-card/65 mb-2">
                             {[...savedAlters]
-                              .filter(a => !a.subsystemId && !a.archived)
+                              .filter(a => !a.subsystemId)
                               .sort((a, b) => (a.alterName || "").localeCompare(b.alterName || "", lang))
                               .map(a => renderAlterCard(a))}
                           </div>
                           <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {[...savedAlters]
-                              .filter(a => !a.subsystemId && !a.archived)
+                              .filter(a => !a.subsystemId)
                               .sort((a, b) => (a.alterName || "").localeCompare(b.alterName || "", lang))
                               .map(a => renderAlterCard(a))}
                           </div>
@@ -3872,45 +3605,6 @@ export default function App() {
                   </div>
                 )}
               </div>
-
-              {/* ── Section Archives ─────────────────────────────── */}
-              {savedAlters.some(a => a.archived) && (
-                <div className="pt-6 border-t border-app-border/20 space-y-4">
-                  <button
-                    onClick={() => toggleSection('archivesOpen' as any)}
-                    className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wider text-app-muted hover:text-app-text transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Archive className="w-3.5 h-3.5" />
-                      <span>{lang === 'fr' ? 'Alters archivés' : 'Archived Alters'}</span>
-                      <span className="px-1.5 py-0.5 rounded bg-app-card border border-app-border/30 text-[9px] font-black">
-                        {savedAlters.filter(a => a.archived).length}
-                      </span>
-                    </div>
-                    {(openSections as any).archivesOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </button>
-
-                  {(openSections as any).archivesOpen && (
-                    <div className="space-y-2">
-                      <p className="text-[10px] text-app-muted uppercase tracking-widest font-bold">
-                        {lang === 'fr'
-                          ? 'Ces alters sont masqués partout dans l\'appli. Clique sur ⊞ pour désarchiver.'
-                          : 'These alters are hidden everywhere in the app. Click ⊞ to unarchive.'}
-                      </p>
-                      <div className="md:hidden rounded-2xl border border-app-border/30 overflow-hidden bg-app-card/40 opacity-70">
-                        {[...savedAlters].filter(a => a.archived)
-                          .sort((a, b) => (a.alterName || "").localeCompare(b.alterName || "", lang))
-                          .map(a => renderAlterCard(a))}
-                      </div>
-                      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-70">
-                        {[...savedAlters].filter(a => a.archived)
-                          .sort((a, b) => (a.alterName || "").localeCompare(b.alterName || "", lang))
-                          .map(a => renderAlterCard(a))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Bottom Section: Create new subsystem form & name principal system side-by-side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-app-border/20">
