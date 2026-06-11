@@ -1024,34 +1024,32 @@ export default function App() {
       document.body.removeChild(wrapper);
       
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = 210;
-      const pdfPageHeight = 297;
-      
+      const pageW = 210;
+      const pageH = 297;
+      const margin = 25.4; // 1 pouce = 2.54cm de chaque côté
+      const contentW = pageW - margin * 2;
+      const contentH = pageH - margin * 2;
+
       const img = new Image();
       img.src = dataUrl;
-      await new Promise((resolve) => {
-        img.onload = resolve;
-      });
-      
-      const imgWidth = img.width;
-      const imgHeight = img.height;
-      const ratio = pdfWidth / imgWidth;
-      const computedPdfHeight = imgHeight * ratio;
-      
-      // Calcul du nombre de pages : on utilise floor pour ne jamais créer
-      // une page qui ne contiendrait que du blanc en bas
-      const totalPages = Math.max(1, Math.floor(computedPdfHeight / pdfPageHeight) + (((computedPdfHeight % pdfPageHeight) > 15) ? 1 : 0));
+      await new Promise((resolve) => { img.onload = resolve; });
 
-      // Page 1
-      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, computedPdfHeight, undefined, 'FAST');
+      const imgW = img.width;
+      const imgH = img.height;
+      // Ratio pour faire tenir la largeur dans la zone de contenu
+      const ratio = contentW / imgW;
+      const scaledH = imgH * ratio;
 
-      // Pages suivantes si nécessaire
-      for (let page = 1; page < totalPages; page++) {
-        pdf.addPage();
-        const position = -(pdfPageHeight * page);
-        pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, computedPdfHeight, undefined, 'FAST');
+      // Nombre de pages nécessaires (seuil 5mm pour ignorer débordements marginaux)
+      const totalPages = Math.max(1, Math.floor(scaledH / contentH) + ((scaledH % contentH) > 5 ? 1 : 0));
+
+      for (let page = 0; page < totalPages; page++) {
+        if (page > 0) pdf.addPage();
+        // Décalage vertical : on remonte l'image de contentH * page pour afficher la bonne tranche
+        const yOffset = margin - (contentH * page);
+        pdf.addImage(dataUrl, 'PNG', margin, yOffset, contentW, scaledH, undefined, 'FAST');
       }
-      
+
       pdf.save(`alter-card-${alterName || 'creator'}.pdf`);
     } catch (err) {
       console.error('oops, failed to generate PDF!', err);
@@ -3403,7 +3401,7 @@ export default function App() {
 
                 {/* Lower Section: Traits & Disorders (List / Scroll) */}
                 <div className="flex-1 p-5 flex flex-col justify-between relative z-10 overflow-hidden bg-app-card/20 backdrop-blur-sm">
-                  <div className="h-full flex flex-col justify-between">
+                  <div className="flex flex-col gap-4">
                     <div className={`flex-1 pr-1 ${
                       isDownloading ? 'max-h-none overflow-visible' : 'max-h-[380px] overflow-y-auto'
                     } space-y-4`}>
