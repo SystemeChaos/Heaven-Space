@@ -1,4 +1,3 @@
-grep -n "3px solid" src/App.tsx
 import MappingPage from './MappingPage';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
